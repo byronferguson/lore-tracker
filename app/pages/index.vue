@@ -44,7 +44,7 @@ function getPlayerClass(id: number) {
 
 <template>
   <div class="p-8 flex flex-col justify-center min-h-screen">
-    <div class="flex flex-row justify-between">
+    <div class="flex flex-row justify-between portrait:flex-col gap-6">
       <PlayerLore
         v-if="players[0]"
         :player="players[0]"
@@ -54,7 +54,7 @@ function getPlayerClass(id: number) {
         @change-lore="handleLoreChange"
         @pass-turn="passTurn"
       />
-      <LoreLog :log="log" class="overflow-y-auto max-h-1/2 lg:max-h-1/3" />
+      <LoreLog :log="log" class="overflow-y-auto max-h-1/2 lg:max-h-1/3 portrait:hidden" />
       <PlayerLore
         v-if="players[1]"
         :player="players[1]"
