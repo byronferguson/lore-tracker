@@ -31,13 +31,24 @@ function handleLoreChange({ playerId, lore }: { playerId: number; lore: number }
   player.loreLog.push(player.lore);
   player.changeLog.push(lore);
 }
+
+function handleUndo({ playerId }: { playerId: number }) {
+  const player = players.value.find(p => p.id === playerId);
+  if (!player) return;
+
+  if (player.changeLog.length === 0) return;
+
+  const lastChange = player.changeLog.pop()!;
+  player.loreLog.pop();
+  player.lore = Math.max(0, player.lore - lastChange);
+}
 </script>
 
 <template>
   <div class="grid min-h-dvh grid-cols-[auto_1fr_auto] gap-2 px-6 text-2xl relative">
-    <LoreButtons class="self-center" :player-id="1" @change="handleLoreChange" />
+    <LoreButtons class="self-center" :player-id="1" @change="handleLoreChange" @undo="handleUndo" />
     <GamePad :players />
-    <LoreButtons class="self-center" :player-id="2" @change="handleLoreChange" />
+    <LoreButtons class="self-center" :player-id="2" @change="handleLoreChange" @undo="handleUndo" />
 
     <UButton
       class="absolute top-4 left-4"

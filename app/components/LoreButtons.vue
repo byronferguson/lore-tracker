@@ -5,50 +5,52 @@ const { playerId } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'change', payload: { playerId: number; lore: number }): void;
+  (e: 'undo', payload: { playerId: number }): void;
 }>();
 
 function changeLore(amount: number) {
   emit('change', { playerId, lore: amount });
 }
+
+type Button = {
+  label: string;
+  value: number;
+  color: 'success' | 'error';
+};
+
+const buttons: Button[] = [
+  { label: '+1', value: 1, color: 'success' },
+  { label: '+2', value: 2, color: 'success' },
+  { label: '+3', value: 3, color: 'success' },
+  { label: '+5', value: 5, color: 'success' },
+  { label: '-1', value: -1, color: 'error' },
+  { label: '-2', value: -2, color: 'error' },
+];
 </script>
 
 <template>
   <div class="flex flex-col gap-4 self-center justify-self-center">
-    <button
-      class="rounded-full bg-green-500 px-3 py-3 text-3xl transition duration-300 ease-in-out select-none active:bg-green-700"
-      @click="changeLore(1)"
-    >
-      +1
-    </button>
-    <button
-      class="rounded-full bg-green-500 px-3 py-3 text-3xl transition duration-300 ease-in-out select-none active:bg-green-700"
-      @click="changeLore(2)"
-    >
-      +2
-    </button>
-    <button
-      class="rounded-full bg-green-500 px-3 py-3 text-3xl transition duration-300 ease-in-out select-none active:bg-green-700"
-      @click="changeLore(3)"
-    >
-      +3
-    </button>
-    <button
-      class="rounded-full bg-green-500 px-3 py-3 text-3xl transition duration-300 ease-in-out select-none active:bg-green-700"
-      @click="changeLore(5)"
-    >
-      +5
-    </button>
-    <button
-      class="rounded-full bg-red-500 px-3 py-3 text-3xl select-none active:bg-red-600"
-      @click="changeLore(-1)"
-    >
-      -1
-    </button>
-    <button
-      class="rounded-full bg-red-500 px-3 py-3 text-3xl select-none active:bg-red-600"
-      @click="changeLore(-2)"
-    >
-      -2
-    </button>
+    <UButton
+      v-for="button in buttons"
+      :key="button.label"
+      :ui="{
+        base: 'justify-center size-16 rounded-full',
+        label: 'text-3xl',
+      }"
+      :label="button.label"
+      :color="button.color"
+      square
+      @click="changeLore(button.value)"
+    />
+    <UButton
+      icon="mdi:undo"
+      variant="outline"
+      color="neutral"
+      :ui="{
+        base: 'justify-center size-16 rounded-full',
+        leadingIcon: 'size-8',
+      }"
+      @click="emit('undo', { playerId })"
+    />
   </div>
 </template>
