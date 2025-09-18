@@ -34,7 +34,7 @@ const buttons: Button[] = [
       v-for="button in buttons"
       :key="button.label"
       :ui="{
-        base: 'justify-center size-16 rounded-full',
+        base: 'justify-center size-16 rounded-full touch-manipulation',
         label: 'text-3xl',
       }"
       :label="button.label"
@@ -47,7 +47,7 @@ const buttons: Button[] = [
       variant="outline"
       color="neutral"
       :ui="{
-        base: 'justify-center size-16 rounded-full',
+        base: 'justify-center size-16 rounded-full touch-manipulation',
         leadingIcon: 'size-8',
       }"
       @click="emit('undo', { playerId })"
