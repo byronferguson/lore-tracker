@@ -7,9 +7,11 @@ function newGame() {
     { id: 1, name: 'Me', lore: 0, loreLog: [0], changeLog: [] as number[] },
     { id: 2, name: 'You', lore: 0, loreLog: [0], changeLog: [] as number[] },
   ];
+
+  open.value = false;
 }
 
-// const isPortrait = useMediaQuery('(orientation: portrait)');
+const open = ref(false);
 
 const players = ref<Players>([
   {
@@ -50,13 +52,20 @@ function handleUndo({ playerId }: { playerId: number }) {
     <GamePad :players />
     <LoreButtons class="self-center" :player-id="2" @change="handleLoreChange" @undo="handleUndo" />
 
-    <UButton
-      class="absolute top-4 left-4"
-      icon="mdi:add"
-      variant="ghost"
-      color="neutral"
-      @click="newGame"
-    />
+    <UModal v-model:open="open">
+      <UButton class="absolute top-4 left-4" icon="mdi:add" variant="ghost" color="neutral" />
+
+      <template #content>
+        <div class="p-4 text-center">
+          <p class="mb-4 text-3xl font-bold">Start New Game?</p>
+          <p class="mb-8">This will reset all lore counts and logs.</p>
+          <div class="flex justify-center gap-4">
+            <UButton label="Cancel" color="neutral" variant="outline" @click="open = false" />
+            <UButton label="New Game" color="primary" @click="newGame" />
+          </div>
+        </div>
+      </template>
+    </UModal>
     <UColorModeButton class="absolute top-4 right-4" />
   </div>
 </template>

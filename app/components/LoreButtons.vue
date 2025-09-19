@@ -8,11 +8,17 @@ const emit = defineEmits<{
   (e: 'undo', payload: { playerId: number }): void;
 }>();
 
-const open = ref(false);
+const isLoreModalOpen = ref(false);
+const isUndoModalOpen = ref(false);
 
 function changeLore(amount: number) {
   emit('change', { playerId, lore: amount });
-  open.value = false;
+  isLoreModalOpen.value = false;
+}
+
+function handleUndo() {
+  emit('undo', { playerId });
+  isUndoModalOpen.value = false;
 }
 
 type Button = {
@@ -64,7 +70,7 @@ const subButtons: Button[] = [
       @click="changeLore(button.value)"
     />
 
-    <UModal v-model:open="open">
+    <UModal v-model:open="isLoreModalOpen">
       <UButton
         label="+X"
         color="success"
@@ -104,15 +110,31 @@ const subButtons: Button[] = [
       square
       @click="changeLore(button.value)"
     />
-    <UButton
-      icon="mdi:undo"
-      variant="outline"
-      color="neutral"
-      :ui="{
-        base: 'justify-center size-16 rounded-full touch-manipulation',
-        leadingIcon: 'size-8',
-      }"
-      @click="emit('undo', { playerId })"
-    />
+
+    <UModal v-model:open="isUndoModalOpen">
+      <UButton
+        icon="mdi:undo"
+        variant="outline"
+        color="neutral"
+        :ui="{
+          base: 'justify-center size-16 rounded-full touch-manipulation',
+          leadingIcon: 'size-8',
+        }" />
+
+      <template #content>
+        <div class="p-4 text-center">
+          <p class="mb-4 text-3xl font-bold">Undo Last Change?</p>
+          <p class="mb-8">This will revert the last lore change made.</p>
+          <div class="flex justify-center gap-4">
+            <UButton
+              label="Cancel"
+              color="neutral"
+              variant="outline"
+              @click="isUndoModalOpen = false"
+            />
+            <UButton label="Undo" color="primary" @click="handleUndo" />
+          </div>
+        </div> </template
+    ></UModal>
   </div>
 </template>
