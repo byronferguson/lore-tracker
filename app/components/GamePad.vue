@@ -19,7 +19,7 @@ defineProps<{
         class="text-center p-4 light:border-gray-900 dark:border-gray-200 not-last:border-r-2 overflow-scroll"
       >
         <li
-          v-for="(value, idx) in [...player.loreLog].reverse()"
+          v-for="(value, idx) in player.loreLog.toReversed()"
           :key="`${player.id}-${idx}`"
           class="decoration-red-500/80 not-first:line-through first:text-6xl"
         >

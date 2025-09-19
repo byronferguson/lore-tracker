@@ -52,7 +52,7 @@ function handleUndo({ playerId }: { playerId: number }) {
 
     <UButton
       class="absolute top-4 left-4"
-      icon="mdi:restart"
+      icon="mdi:add"
       variant="ghost"
       color="neutral"
       @click="newGame"
