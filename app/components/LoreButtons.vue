@@ -70,7 +70,7 @@ const subButtons: Button[] = [
       @click="changeLore(button.value)"
     />
 
-    <UModal v-model:open="isLoreModalOpen">
+    <UModal v-model:open="isLoreModalOpen" title="Add Lore" description="Select amount to add">
       <UButton
         label="+X"
         color="success"
@@ -111,7 +111,11 @@ const subButtons: Button[] = [
       @click="changeLore(button.value)"
     />
 
-    <UModal v-model:open="isUndoModalOpen">
+    <UModal
+      v-model:open="isUndoModalOpen"
+      title="Undo Last Change?"
+      description="This will revert the last lore change made."
+    >
       <UButton
         icon="mdi:undo"
         variant="outline"

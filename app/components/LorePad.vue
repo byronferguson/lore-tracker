@@ -4,14 +4,25 @@ import type { Players } from '~/types/Player';
 defineProps<{
   players: Players;
 }>();
+
+defineEmits<{
+  (e: 'toggleActivePlayer'): void;
+}>();
 </script>
 
 <template>
   <div class="grid max-h-dvh grid-flow-col grid-cols-2 grid-rows-[auto_1fr] gap-0.5 bg-white">
     <template v-for="player in players" :key="player.id">
-      <h2 class="p-4 text-center text-3xl bg-[var(--ui-bg)]">
-        {{ player.name }}
-      </h2>
+      <div
+        class="p-4 bg-[var(--ui-bg)] flex flex-row justify-between items-center gap-2"
+        :class="{ 'bg-yellow-600/75': player.isActive }"
+        @click="$emit('toggleActivePlayer')"
+      >
+        <h2 class="text-center text-3xl">
+          {{ player.name }}
+        </h2>
+        <span v-show="player.isActive">♦︎</span>
+      </div>
 
       <ul class="text-center p-4overflow-scroll bg-[var(--ui-bg)]">
         <li

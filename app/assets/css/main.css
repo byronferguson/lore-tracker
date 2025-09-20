@@ -1,2 +1,16 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
+
+@theme {
+  --color-indigo: #373b70;
+  --color-gold: #d3ba84;
+  --color-parchment: #e3caa8;
+  --color-kelp: #1c1c1a;
+
+  --color-amber: #f5b202;
+  --color-amethyst: #81377b;
+  --color-emerald: #2a8934;
+  --color-ruby: #d3082f;
+  --color-sapphire: #0189c4;
+  --color-steel: #9fa8b4;
+}
