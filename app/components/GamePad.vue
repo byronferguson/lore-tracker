@@ -7,17 +7,13 @@ defineProps<{
 </script>
 
 <template>
-  <div class="grid max-h-dvh grid-flow-col grid-cols-2 grid-rows-[auto_1fr] gap-0.5">
+  <div class="grid max-h-dvh grid-flow-col grid-cols-2 grid-rows-[auto_1fr] gap-0.5 bg-white">
     <template v-for="player in players" :key="player.id">
-      <h2
-        class="p-4 text-center text-3xl border-b-2 first:border-r-2 light:border-gray-900 dark:border-gray-200"
-      >
+      <h2 class="p-4 text-center text-3xl bg-[var(--ui-bg)]">
         {{ player.name }}
       </h2>
 
-      <ul
-        class="text-center p-4 light:border-gray-900 dark:border-gray-200 not-last:border-r-2 overflow-scroll"
-      >
+      <ul class="text-center p-4overflow-scroll bg-[var(--ui-bg)]">
         <li
           v-for="(value, idx) in player.loreLog.toReversed()"
           :key="`${player.id}-${idx}`"

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useDark } from '@vueuse/core';
 import type { Players } from '~/types/Player';
 
 function newGame() {
@@ -8,10 +7,10 @@ function newGame() {
     { id: 2, name: 'You', lore: 0, loreLog: [0], changeLog: [] as number[] },
   ];
 
-  open.value = false;
+  isNewGameModalOpen.value = false;
 }
 
-const open = ref(false);
+const isNewGameModalOpen = ref(false);
 
 const players = ref<Players>([
   {
@@ -23,7 +22,6 @@ const players = ref<Players>([
   },
   { id: 2, name: 'You', lore: 0, loreLog: [0], changeLog: [] },
 ]);
-useDark();
 
 function handleLoreChange({ playerId, lore }: { playerId: number; lore: number }) {
   const player = players.value.find(p => p.id === playerId);
@@ -52,7 +50,7 @@ function handleUndo({ playerId }: { playerId: number }) {
     <GamePad :players />
     <LoreButtons class="self-center" :player-id="2" @change="handleLoreChange" @undo="handleUndo" />
 
-    <UModal v-model:open="open">
+    <UModal v-model:open="isNewGameModalOpen">
       <UButton class="absolute top-4 left-4" icon="mdi:add" variant="ghost" color="neutral" />
 
       <template #content>
@@ -60,7 +58,12 @@ function handleUndo({ playerId }: { playerId: number }) {
           <p class="mb-4 text-3xl font-bold">Start New Game?</p>
           <p class="mb-8">This will reset all lore counts and logs.</p>
           <div class="flex justify-center gap-4">
-            <UButton label="Cancel" color="neutral" variant="outline" @click="open = false" />
+            <UButton
+              label="Cancel"
+              color="neutral"
+              variant="outline"
+              @click="isNewGameModalOpen = false"
+            />
             <UButton label="New Game" color="primary" @click="newGame" />
           </div>
         </div>
