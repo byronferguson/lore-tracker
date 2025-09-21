@@ -14,3 +14,11 @@
   --color-sapphire: #0189c4;
   --color-steel: #9fa8b4;
 }
+
+:root {
+  font-size: 14px;
+}
+
+.game-board {
+  height:calc(100dvh - 5rem);
+}

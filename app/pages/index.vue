@@ -1,47 +1,38 @@
 <script setup lang="ts">
-import type { LogEntry, Players, Turn } from '~/types/Player';
+import type { Game } from '~/types/Game';
 
-function resetPlayers() {
-  return [
-    {
-      id: 1,
-      name: 'Me',
-      lore: 0,
-      currentTurn: { turnNumber: 1, loreTotal: 0, loreChange: 0, log: [] as LogEntry[] },
-      turns: [] as Turn[],
-      isActive: true,
-    },
-    {
-      id: 2,
-      name: 'You',
-      lore: 0,
-      currentTurn: { turnNumber: 1, loreTotal: 0, loreChange: 0, log: [] as LogEntry[] },
-      turns: [] as Turn[],
-      isActive: false,
-    },
-  ];
+function resetGame() {
+return {
+  player1Name: 'Me',
+  player2Name: 'You',
+  player1Lore: 0,
+  player2Lore: 0,
+  isActive: true,
+  turns: [{
+    player1: { loreTotal: 0, loreChange: 0, log: [] },
+    player2: { loreTotal: 0, loreChange: 0, log: [] },
+  }],
+};
 }
 
 function newGame() {
-  players.value = resetPlayers();
+  game.value = resetGame();
   isNewGameModalOpen.value = false;
 }
 
 const isNewGameModalOpen = ref(false);
 
-const turnNumber = ref(1);
-const players = ref<Players>(resetPlayers());
+const game = ref<Game>(resetGame());
 
-function handleLoreChange({ playerId, lore }: { playerId: number; lore: number }) {
-  const player = players.value.find(p => p.id === playerId);
-  if (!player) return;
+function handleLoreChange({ playerId, lore }: { playerId: 1 | 2; lore: number }) {
+  const activeTurn = game.value.turns[0];
 
-  if (lore < 0 && player.lore === 0) return;
+  if(!activeTurn) return;
 
-  player.lore = Math.max(0, player.lore + lore);
+  const playerLore = game.value[`player${playerId}Lore`];
+  game.value[`player${playerId}Lore`] = Math.max(0, playerLore + lore);
 
-  player.currentTurn.log.push({ loreChange: lore, loreTotal: player.lore });
-  player.currentTurn.loreTotal = player.lore;
+  activeTurn[`player${playerId}`].log.unshift({ loreChange: lore, loreTotal: game.value[`player${playerId}Lore`] });
 }
 
 function handleUndo({ playerId }: { playerId: number }) {
@@ -52,56 +43,52 @@ function handleUndo({ playerId }: { playerId: number }) {
   // player.lore = Math.max(0, player.lore - lastChange.loreChange);
 }
 
-function toggleActivePlayer() {
-  turnNumber.value += 1;
+function newTurn() {
+  game.value.isActive = !game.value.isActive;
 
-  players.value.forEach(player => {
-    if (player.currentTurn.log.length > 0 || player.isActive) {
-      player.turns.push(player.currentTurn);
-    }
+  // tabulate the end of turn values
 
-    player.currentTurn = {
-      turnNumber: turnNumber.value,
-      loreTotal: player.lore,
-      loreChange: 0,
-      log: [],
-    };
-    player.isActive = !player.isActive;
+  game.value.turns.unshift({
+    player1: { loreTotal: 0, loreChange: 0, log: [] },
+    player2: { loreTotal: 0, loreChange: 0, log: [] },
   });
+
 }
 </script>
 
 <template>
-  <div class="grid min-h-dvh grid-cols-[auto_1fr_auto] gap-2 px-6 text-2xl relative">
-    <LoreButtons class="self-center" :player-id="1" @change="handleLoreChange" @undo="handleUndo" />
-
-    <TurnTracked :players @toggle-active-player="toggleActivePlayer" />
-
-    <LoreButtons class="self-center" :player-id="2" @change="handleLoreChange" @undo="handleUndo" />
-
-    <UModal
-      v-model:open="isNewGameModalOpen"
-      title="Start New Game?"
-      description="This will reset all lore counts and logs."
-    >
-      <UButton class="absolute top-4 left-4" icon="mdi:add" variant="ghost" color="neutral" />
-
-      <template #content>
-        <div class="p-4 text-center">
-          <p class="mb-4 text-3xl font-bold">Start New Game?</p>
-          <p class="mb-8">This will reset all lore counts and logs.</p>
-          <div class="flex justify-center gap-4">
-            <UButton
-              label="Cancel"
-              color="neutral"
-              variant="outline"
-              @click="isNewGameModalOpen = false"
-            />
-            <UButton label="New Game" color="primary" @click="newGame" />
+  <main class="flex flex-col" >
+    <section class="grid game-board grid-cols-[auto_1fr_auto] gap-2 px-6 text-2xl relative flex-grow">
+      <LoreButtons :player-id="1" @change="handleLoreChange" @undo="handleUndo" />
+      <GameBoard :game />
+      <LoreButtons :player-id="2" @change="handleLoreChange" @undo="handleUndo" />
+      <UModal
+        v-model:open="isNewGameModalOpen"
+        title="Start New Game?"
+        description="This will reset all lore counts and logs."
+      >
+        <UButton class="absolute top-4 left-4" icon="mdi:add" variant="ghost" color="neutral" />
+        <template #content>
+          <div class="p-4 text-center">
+            <p class="mb-4 text-3xl font-bold">Start New Game?</p>
+            <p class="mb-8">This will reset all lore counts and logs.</p>
+            <div class="flex justify-center gap-4">
+              <UButton
+                label="Cancel"
+                color="neutral"
+                variant="outline"
+                @click="isNewGameModalOpen = false"
+              />
+              <UButton label="New Game" color="primary" @click="newGame" />
+            </div>
           </div>
-        </div>
-      </template>
-    </UModal>
-    <UColorModeButton class="absolute top-4 right-4" />
-  </div>
+        </template>
+      </UModal>
+      <UColorModeButton class="absolute top-4 right-4" />
+    </section>
+
+    <footer class="px-2 py-4">
+      <UButton class="w-full" variant="subtle" :color="game.isActive ? 'error' : 'success'" :label="game.isActive ? 'End Turn' : 'Start Turn'" size="xl" block :ui="{ base: 'touch-manipulation', label: 'text-3xl', }" @click="newTurn" />
+    </footer>
+  </main>
 </template>

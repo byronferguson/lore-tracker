@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TopCut — Prototype</title>
+<style>
+  :root {
+    --bg:#0f1115; --panel:#1a1f2e; --panel2:#121620; --text:#e6edf3;
+    --primary:#4f8cff; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --muted:#b6c2cf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:20px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  h1,h2{margin:8px 0 14px;text-align:center}
+  h1{font-size:clamp(22px,5vw,34px)} h2{font-size:clamp(20px,4.5vw,28px)}
+  .page{display:none;max-width:980px;margin:0 auto}
+  .page.active{display:block}
+  .row{display:grid;gap:12px}
+  .one{grid-template-columns:1fr}
+  .two{grid-template-columns:1fr 1fr}
+  .panel{background:var(--panel);border-radius:12px;padding:16px}
+  .panel2{background:var(--panel2);border-radius:12px;padding:12px}
+  label{display:block;margin:4px 0 6px}
+  input,select,textarea{
+    width:100%;padding:12px;border:none;border-radius:10px;background:#161a22;color:#fff;font-size:16px
+  }
+  textarea{min-height:90px}
+  .btn{
+    display:inline-block;width:100%;padding:clamp(12px,2vw,18px);margin:8px 0;
+    border:none;border-radius:12px;font-weight:700;font-size:clamp(15px,3vw,18px);
+    cursor:pointer;color:#fff;background:var(--primary)
+  }
+  .btn.ok{background:var(--ok)} .btn.warn{background:var(--warn)} .btn.danger{background:var(--danger)}
+  .toolbar{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:14px auto;max-width:560px}
+  .scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+  .playerBox{background:var(--panel);border-radius:12px;padding:16px;text-align:center;display:flex;flex-direction:column;align-items:center}
+  .score{font-size:clamp(28px,6vw,48px);font-weight:800;margin:10px 0}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+  .log{height:220px;overflow:auto}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:#0f1320;border-radius:9999px;padding:6px 10px;font-size:12px;color:var(--muted)}
+  .card{background:var(--panel);border-radius:12px;padding:14px;margin:10px 0}
+  .topline{display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .muted{color:var(--muted);font-size:14px}
+  .link{color:#9ecbff;text-decoration:none}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:#0f1320;padding:4px 10px;border-radius:999px;font-size:12px;color:#b6c2cf}
+  .badge.ok{color:#a7f3d0} .badge.lock{color:#fca5a5}
+  .popup{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;justify-content:center;align-items:center;padding:5%;z-index:10}
+  .modal{background:var(--panel);border-radius:12px;position:relative;width:90%;max-width:420px;padding:20px;display:flex;flex-direction:column;gap:10px}
+  .close{position:absolute;top:10px;right:10px;background:transparent;border:none;color:#fff;font-size:20px;font-weight:800;cursor:pointer}
+  .modalGrid{background:var(--panel);border-radius:12px;position:relative;width:90%;max-width:360px;height:400px;padding:44px 20px 20px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;overflow-y:auto}
+  .error{color:#ff9ea1;font-size:14px;margin-top:6px}
+  details summary{cursor:pointer}
+  .inkBold{font-weight:800;margin-top:6px}
+</style>
+</head>
+<body>
+
+<!-- ======= HOME ======= -->
+<div id="homePage" class="page active">
+  <h1>TopCut</h1>
+  <div class="panel" style="text-align:center">
+    <p class="muted" style="margin:6px 0 16px">Track TCG rounds, Swiss, Top Cut, logs, and notes.</p>
+    <div class="toolbar" style="max-width:420px">
+      <button class="btn ok" onclick="goToNewSession()">Start New Session</button>
+      <button class="btn" onclick="goToPrevSessions()">View Previous Sessions</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= NEW SESSION (each field on its own line) ======= -->
+<div id="newSessionPage" class="page">
+  <h2>Start New Session</h2>
+  <div class="panel">
+    <div class="row one">
+      <div>
+        <label>Session Type</label>
+        <select id="sessType">
+          <option value="Tournament" selected>Tournament</option>
+          <option value="One-Off">One-Off</option>
+        </select>
+      </div>
+      <div>
+        <label>Format</label>
+        <select id="sessFormat">
+          <option value="Core Constructed" selected>Core Constructed</option>
+          <option value="Infinity">Infinity</option>
+        </select>
+      </div>
+      <div id="tNameWrap">
+        <label>Tournament Name</label>
+        <input id="tournamentName" placeholder="e.g., Store Championship"/>
+      </div>
+      <div id="rPlannedWrap">
+        <label>Rounds Planned</label>
+        <input id="roundsPlanned" type="number" min="1" step="1" placeholder="e.g., 4"/>
+      </div>
+      <div id="topCutWrap">
+        <label>Top Cut?</label>
+        <select id="topCutEnabled">
+          <option value="No" selected>No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+      <div id="topCutNumWrap" style="display:none">
+        <label>Cut to Top</label>
+        <input id="topCutNum" type="number" min="2" step="2" placeholder="e.g., 8"/>
+      </div>
+    </div>
+
+    <div class="panel2" style="margin-top:14px">
+      <strong>Your Deck</strong>
+      <div class="row two" style="margin-top:10px">
+        <div>
+          <label>Your Ink 1 <span class="muted">(required)</span></label>
+          <select id="myInk1">
+            <option value="">— Select —</option>
+            <option>Amber</option><option>Amethyst</option><option>Emerald</option>
+            <option>Ruby</option><option>Sapphire</option><option>Steel</option>
+          </select>
+          <div id="errInk1" class="error" style="display:none">Please choose Ink 1.</div>
+        </div>
+        <div>
+          <label>Your Ink 2 <span class="muted">(required)</span></label>
+          <select id="myInk2">
+            <option value="">— Select —</option>
+            <option>Amber</option><option>Amethyst</option><option>Emerald</option>
+            <option>Ruby</option><option>Sapphire</option><option>Steel</option>
+          </select>
+          <div id="errInk2" class="error" style="display:none">Please choose Ink 2.</div>
+        </div>
+      </div>
+      <div class="row one">
+        <div>
+          <label>Deck Name (optional)</label>
+          <input id="myDeckName" placeholder="e.g., Ruby Amethyst Tempo"/>
+          <div class="inkBold" id="inkPreview" style="display:none"></div>
+        </div>
+        <div>
+          <label>Dreamborn Link (optional)</label>
+          <input id="myDeckUrl" placeholder="https://dreamborn.gg/..."/>
+          <div id="errUrl" class="error" style="display:none">Enter a valid URL starting with http(s)://</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar" style="max-width:460px">
+      <button class="btn ok" onclick="startSession()">Create Session</button>
+      <button class="btn" onclick="backToHome()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= ROUNDS OVERVIEW ======= -->
+<div id="roundsOverviewPage" class="page">
+  <h2>Current Session — Rounds Overview</h2>
+  <div id="activeSessionHeader" class="panel"></div>
+  <div id="roundsListActive"></div>
+  <div class="toolbar" style="max-width:700px">
+    <button id="enterTopCutBtn" class="btn warn" style="display:none" onclick="openPreTopCutModal()">🏆 Enter Top Cut</button>
+    <button id="startNextBtn" class="btn ok" onclick="startNextRound()">➕ Start Next Round</button>
+    <button class="btn" onclick="backToHome()">🏠 Home</button>
+  </div>
+</div>
+
+<!-- ======= ROUND TRACKER ======= -->
+<div id="roundPage" class="page">
+  <h2><span id="roundPhaseLabel">Round</span> <span id="roundNumberLabel">1</span> — <span id="gameIndicator">Game 1 of 3</span></h2>
+
+  <div class="scoreboard">
+    <div class="playerBox">
+      <h3 id="p1Name" onclick="openNameEdit('p1')">You</h3>
+      <div>Games Won: <span id="p1Games">0</span></div>
+      <div id="p1Score" class="score">0</div>
+      <div class="grid2">
+        <button class="btn" onclick="changeScore('p1',1)">+1</button>
+        <button class="btn" onclick="changeScore('p1',-1)">-1</button>
+        <button class="btn" onclick="openAmountPopup('p1','plus')">+X</button>
+        <button class="btn" onclick="openAmountPopup('p1','minus')">-X</button>
+      </div>
+      <button class="btn warn" onclick="toggleLoreTarget('p1')">Toggle 25 Lore</button>
+    </div>
+
+    <div class="playerBox">
+      <h3 id="p2Name" onclick="openNameEdit('p2')">Opponent</h3>
+      <div>Games Won: <span id="p2Games">0</span></div>
+      <div id="p2Score" class="score">0</div>
+      <div class="grid2">
+        <button class="btn" onclick="changeScore('p2',1)">+1</button>
+        <button class="btn" onclick="changeScore('p2',-1)">-1</button>
+        <button class="btn" onclick="openAmountPopup('p2','plus')">+X</button>
+        <button class="btn" onclick="openAmountPopup('p2','minus')">-X</button>
+      </div>
+      <button class="btn warn" onclick="toggleLoreTarget('p2')">Toggle 25 Lore</button>
+    </div>
+  </div>
+
+  <div class="panel2 log" id="logBox"></div>
+
+  <div class="toolbar" style="max-width:600px">
+    <button id="leftBtn" class="btn danger" onclick="handleLeft()">⬅ Back</button>
+    <button id="rightBtn" class="btn ok" onclick="handleRight()">➡ Next Game</button>
+  </div>
+</div>
+
+<!-- ======= SURVEY ======= -->
+<div id="surveyPage" class="page">
+  <h2><span id="surveyPhaseLabel">Round</span> <span id="surveyRoundLabel">1</span> — Survey</h2>
+
+  <div class="panel">
+    <div class="row one">
+      <div>
+        <label>Opponent Ink 1</label>
+        <select id="ink1">
+          <option>Amber</option><option>Amethyst</option><option>Emerald</option>
+          <option>Ruby</option><option>Sapphire</option><option>Steel</option>
+        </select>
+      </div>
+      <div>
+        <label>Opponent Ink 2</label>
+        <select id="ink2">
+          <option>Amber</option><option>Amethyst</option><option>Emerald</option>
+          <option>Ruby</option><option>Sapphire</option><option>Steel</option>
+        </select>
+      </div>
+      <div>
+        <label>Opponent Deck Type</label>
+        <select id="deckType">
+          <option>Aggro</option><option>Control</option><option>Mid Ranged</option><option>Other</option>
+        </select>
+      </div>
+      <div class="row two">
+        <div>
+          <label>Favorable Matchup?</label>
+          <select id="favorability">
+            <option>Yes</option><option>No</option><option>Even</option>
+          </select>
+        </div>
+        <div>
+          <label>Opponent decklist available?</label>
+          <select id="decklist">
+            <option>Yes</option><option>No</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label>Had a plan going in?</label>
+        <select id="hadPlan">
+          <option>Yes</option><option>No</option>
+        </select>
+      </div>
+      <div>
+        <label>How did you feel?</label>
+        <textarea id="feelings" placeholder="e.g., Confident, nervous..."></textarea>
+      </div>
+      <div>
+        <label>Key card(s)</label>
+        <textarea id="keyCards" placeholder="e.g., Card A, Card B"></textarea>
+      </div>
+      <div>
+        <label>Final thoughts</label>
+        <textarea id="finalThoughts" placeholder="Notes on sequencing, sideboard ideas, misplays, etc."></textarea>
+      </div>
+    </div>
+
+    <div class="toolbar" style="max-width:420px">
+      <button class="btn ok" onclick="submitSurvey()">Submit Survey</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= POST-SURVEY ======= -->
+<div id="postSurveyPage" class="page">
+  <h2>Round Saved</h2>
+  <div class="panel" style="text-align:center">
+    <p class="muted" id="postSurveyMsg">What would you like to do next?</p>
+    <div class="toolbar" style="max-width:520px">
+      <button id="postNextBtn" class="btn ok" onclick="startNextRound()">➡ Next Round</button>
+      <button class="btn" onclick="goToActiveOverview()">↩️ Session Overview</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= PREVIOUS SESSIONS ======= -->
+<div id="prevSessionsPage" class="page">
+  <h2>Previous Sessions</h2>
+  <div class="panel">
+    <div class="row one">
+      <div>
+        <label>Search</label>
+        <input id="searchInput" placeholder="Tournament or Deck names"/>
+      </div>
+      <div class="row two">
+        <div>
+          <label>Filter: My Ink 1</label>
+          <select id="filterInk1">
+            <option value="">Any</option>
+            <option>Amber</option><option>Amethyst</option><option>Emerald</option>
+            <option>Ruby</option><option>Sapphire</option><option>Steel</option>
+          </select>
+        </div>
+        <div>
+          <label>Filter: My Ink 2</label>
+          <select id="filterInk2">
+            <option value="">Any</option>
+            <option>Amber</option><option>Amethyst</option><option>Emerald</option>
+            <option>Ruby</option><option>Sapphire</option><option>Steel</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar" style="max-width:520px">
+      <button class="btn ok" onclick="renderPrevSessions()">Apply</button>
+      <button class="btn" onclick="backToHome()">🏠 Home</button>
+    </div>
+  </div>
+  <div id="prevSessionsList"></div>
+</div>
+
+<!-- ======= SESSION DETAIL ======= -->
+<div id="sessionDetailPage" class="page">
+  <h2>Session Detail</h2>
+  <div id="sessionDetailHeader" class="panel"></div>
+  <div id="sessionDetailRounds"></div>
+</div>
+
+<!-- ======= MODALS ======= -->
+<div id="amountPopup" class="popup"><div id="amountPopupContent" class="modalGrid">
+  <button class="close" onclick="closeAmountPopup()">✕</button>
+</div></div>
+
+<div id="gameResultModal" class="popup"><div class="modal">
+  <button class="close" onclick="closeGameResultModal()">✕</button>
+  <h3 style="text-align:center;margin-top:6px">Who won this game?</h3>
+  <button class="btn ok" onclick="recordGameResult('you')">✅ You Won</button>
+  <button class="btn"    onclick="recordGameResult('opponent')">❌ Opponent Won</button>
+  <button class="btn warn" onclick="recordGameResult('tie')">🤝 Tie</button>
+</div></div>
+
+<div id="confirmWinModal" class="popup"><div class="modal">
+  <button class="close" onclick="closeConfirmWinModal()">✕</button>
+  <h3 id="confirmWinText" style="text-align:center;margin-top:6px"></h3>
+  <button class="btn ok" onclick="confirmWin()">✅ Confirm</button>
+  <button class="btn danger" onclick="closeConfirmWinModal()">↩️ Back to Match</button>
+</div></div>
+
+<div id="nameEditModal" class="popup"><div class="modal">
+  <button class="close" onclick="closeNameEditModal()">✕</button>
+  <h3 style="margin-top:6px">Edit Name</h3>
+  <input id="nameEditInput"/>
+  <button class="btn ok" onclick="saveNameEdit()">Save</button>
+</div></div>
+
+<!-- Pre-TopCut seed prompt -->
+<div id="preTopCutModal" class="popup"><div class="modal">
+  <button class="close" onclick="closePreTopCutModal()">✕</button>
+  <h3 style="margin-top:6px">Enter Top Cut</h3>
+  <p class="muted">Before Top Cut: what was your Swiss standing/seed?</p>
+  <input id="preTopCutStanding" placeholder="e.g., 5th/64 or Seed #5"/>
+  <div class="toolbar" style="max-width:380px">
+    <button class="btn ok" onclick="enterTopCut()">Confirm & Enter</button>
+    <button class="btn" onclick="closePreTopCutModal()">Cancel</button>
+  </div>
+</div></div>
+
+<!-- Final standing + completion lock -->
+<div id="finalStandingModal" class="popup"><div class="modal">
+  <button class="close" onclick="closeFinalStandingModal()">✕</button>
+  <h3 style="margin-top:6px">Finalize Tournament</h3>
+  <p class="muted">Final standing (e.g., 23rd/128):</p>
+  <input id="finalStandingInput" placeholder="e.g., 23rd/128"/>
+  <div class="panel2" style="margin-top:8px">
+    <strong>⚠️ Once you mark this tournament complete, you will <u>not</u> be able to resume or add rounds.</strong>
+  </div>
+  <div class="toolbar" style="max-width:420px">
+    <button class="btn danger" onclick="confirmComplete()">Confirm Complete</button>
+    <button class="btn" onclick="closeFinalStandingModal()">Cancel</button>
+  </div>
+</div></div>
+
+<script>
+/* ========== Persistence ========== */
+const DB_KEY = "TopCutDB_v3";
+function loadDB(){ try{ return JSON.parse(localStorage.getItem(DB_KEY)) || { sessions: [], activeSessionId: null }; }catch{ return { sessions: [], activeSessionId: null }; } }
+function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function newId(prefix){ return prefix+"_"+new Date().toISOString().replace(/[:.]/g,"-"); }
+
+/* ========== Navigation ========== */
+function show(id){ document.querySelectorAll(".page").forEach(p=>p.classList.remove("active")); document.getElementById(id).classList.add("active"); }
+function goToNewSession(){ show("newSessionPage"); }
+function goToPrevSessions(){ renderPrevSessions(); show("prevSessionsPage"); }
+function backToHome(){ show("homePage"); }
+
+/* ========== New Session dynamic visibility ========== */
+const sessTypeEl = document.getElementById("sessType");
+const tNameWrap = document.getElementById("tNameWrap");
+const rPlannedWrap = document.getElementById("rPlannedWrap");
+const topCutWrap = document.getElementById("topCutWrap");
+const topCutEnabledEl = document.getElementById("topCutEnabled");
+const topCutNumWrap = document.getElementById("topCutNumWrap");
+function updateTournamentVisibility(){
+  const isT = (sessTypeEl.value === "Tournament");
+  tNameWrap.style.display = isT ? "block":"none";
+  rPlannedWrap.style.display = isT ? "block":"none";
+  topCutWrap.style.display = isT ? "block":"none";
+  topCutNumWrap.style.display = (isT && topCutEnabledEl.value==="Yes") ? "block":"none";
+}
+sessTypeEl.addEventListener("change", updateTournamentVisibility);
+topCutEnabledEl.addEventListener("change", updateTournamentVisibility);
+updateTournamentVisibility();
+
+/* ========== Deck Ink Preview (bold under deck name) ========== */
+function updateInkPreview(){
+  const i1=document.getElementById("myInk1").value, i2=document.getElementById("myInk2").value;
+  const el=document.getElementById("inkPreview");
+  if(i1 && i2){ el.style.display="block"; el.textContent=`${i1} • ${i2}`; } else { el.style.display="none"; }
+}
+document.getElementById("myInk1").addEventListener("change", updateInkPreview);
+document.getElementById("myInk2").addEventListener("change", updateInkPreview);
+
+/* ========== Start Session ========== */
+function startSession(){
+  const ink1 = document.getElementById("myInk1").value.trim();
+  const ink2 = document.getElementById("myInk2").value.trim();
+  const err1 = document.getElementById("errInk1"); const err2 = document.getElementById("errInk2");
+  err1.style.display = ink1 ? "none":"block"; err2.style.display = ink2 ? "none":"block";
+  if(!ink1 || !ink2) return;
+
+  let deckUrl = document.getElementById("myDeckUrl").value.trim();
+  if(deckUrl && !/^https?:\/\//i.test(deckUrl)) deckUrl = "https://" + deckUrl;
+  const errUrl = document.getElementById("errUrl");
+  if(deckUrl && !/^https?:\/\/\S+\.\S+/.test(deckUrl)){ errUrl.style.display="block"; return; } else errUrl.style.display="none";
+
+  const db = loadDB();
+  const isTournament = document.getElementById("sessType").value==="Tournament";
+  const roundsPlanned = isTournament ? (parseInt(document.getElementById("roundsPlanned").value||"0",10)||0) : null;
+  const topCutEnabled = isTournament && (document.getElementById("topCutEnabled").value==="Yes");
+  const cutTo = topCutEnabled ? (parseInt(document.getElementById("topCutNum").value||"0",10)||0) : null;
+
+  const s = {
+    id: newId("sess"),
+    createdAt: Date.now(),
+    type: document.getElementById("sessType").value,
+    format: document.getElementById("sessFormat").value,
+    tournamentName: isTournament ? ((document.getElementById("tournamentName").value||"").trim() || null) : null,
+    roundsPlanned: roundsPlanned,
+    topCut: topCutEnabled ? {
+      enabled: true,
+      cutTo: cutTo,
+      roundsPlanned: cutTo ? Math.ceil(Math.log2(cutTo)) : 0,
+      currentIndex: -1,      // -1 not started, 0..N-1 active index
+      eliminated: false
+    } : null,
+    phase: isTournament ? "Swiss" : "Swiss",  // one-offs still use Swiss flow
+    myInks: [ink1, ink2],
+    myDeckName: (document.getElementById("myDeckName").value||"").trim() || null,
+    myDeckUrl: deckUrl || null,
+    preTopCutStanding: null,
+    finalStanding: null,
+    rounds: [],
+    totalRecord: { wins:0, losses:0, draws:0 }
+  };
+
+  db.sessions.unshift(s);
+  db.activeSessionId = s.id;
+  saveDB(db);
+  renderActiveOverview();
+  show("roundsOverviewPage");
+}
+
+/* ========== Active Session Helpers ========== */
+function getActiveSession(){ const db=loadDB(); return db.sessions.find(x=>x.id===db.activeSessionId) || null; }
+function setActiveSession(s){ const db=loadDB(); const i=db.sessions.findIndex(x=>x.id===s.id); if(i>=0){ db.sessions[i]=s; saveDB(db); } }
+
+/* ========== Rounds Overview ========== */
+function renderActiveOverview(){
+  const s = getActiveSession();
+  const header = document.getElementById("activeSessionHeader");
+  const list = document.getElementById("roundsListActive");
+  const enterTopCutBtn = document.getElementById("enterTopCutBtn");
+  const startNextBtn = document.getElementById("startNextBtn");
+  if(!s){ header.innerHTML="No active session."; list.innerHTML=""; enterTopCutBtn.style.display="none"; startNextBtn.disabled=true; return; }
+
+  const deckLine = `${s.myDeckName?`<strong>${s.myDeckName}</strong>`:"(No deck name)"}
+                    <div class="inkBold">${(s.myInks&&s.myInks[0])?s.myInks[0]:"—"} • ${(s.myInks&&s.myInks[1])?s.myInks[1]:"—"}</div>`;
+
+  header.innerHTML = `
+    <div class="topline">
+      <div>
+        <div><strong>${s.type}</strong> ${s.tournamentName?("— "+s.tournamentName):""}</div>
+        <div class="muted">${new Date(s.createdAt).toLocaleString()} • ${s.format} • Phase: <strong>${s.phase}</strong></div>
+      </div>
+      <div class="chips">
+        ${s.phase==="Complete" ? `<span class="badge lock">🔒 Complete</span>` : ""}
+        ${s.topCut && s.topCut.enabled ? `<span class="badge">Top ${s.topCut.cutTo}</span>`:""}
+      </div>
+    </div>
+    <div class="muted" style="margin-top:6px">
+      Record: ${s.totalRecord.wins}-${s.totalRecord.losses}-${s.totalRecord.draws}
+      ${s.myDeckUrl?` • <a class="link" href="${s.myDeckUrl}" target="_blank" rel="noopener">Dreamborn</a>`:""}
+      ${s.preTopCutStanding?` • Before Top Cut: <strong>${s.preTopCutStanding}</strong>`:""}
+      ${s.finalStanding?` • Final: <strong>${s.finalStanding}</strong>`:""}
+    </div>
+    <div style="margin-top:8px">${deckLine}</div>
+  `;
+
+  if(!s.rounds.length){
+    list.innerHTML = `<div class="card muted">No rounds yet. Click “Start Next Round”.</div>`;
+  } else {
+    list.innerHTML = s.rounds.map(r=>`
+      <div class="card">
+        <div>
+          <strong>${r.isTopCut ? (r.topCutStage||"Top Cut") : "Round "+r.roundNumber}</strong>
+          — vs <strong>${r.opponentName||"Opponent"}</strong>
+          ${r.isTopCut?` • <span class="badge">Top Cut</span>`:""}
+        </div>
+        <div class="muted">
+          Match Result: ${r.record.wins}-${r.record.losses}-${r.record.draws}
+          ${r.survey ? ` • Opp Inks: ${r.survey.inks[0]} / ${r.survey.inks[1]} • Deck: ${r.survey.deckType}` : ""}
+        </div>
+        <details style="margin-top:8px">
+          <summary>Game Logs</summary>
+          ${r.gameLogs.map((g,i)=>`
+            <div class="panel2" style="margin:8px 0">
+              <div><strong>Game ${i+1}</strong></div>
+              <div class="muted">${g.length?g.join("<br/>"):"No entries"}</div>
+            </div>`).join("")}
+        </details>
+        ${r.survey ? `<details style="margin-top:8px">
+          <summary>Survey Notes</summary>
+          <div class="muted" style="margin-top:6px">
+            <div><strong>Plan:</strong> ${r.survey.hadPlan||"—"}</div>
+            <div><strong>Feelings:</strong> ${(r.survey.feelings||"—").replace(/\n/g,"<br/>")}</div>
+            <div><strong>Favorable:</strong> ${r.survey.favorability}</div>
+            <div><strong>Had decklist:</strong> ${r.survey.hadDecklist}</div>
+            <div><strong>Key cards:</strong> ${(r.survey.keyCards||"—").replace(/\n/g,"<br/>")}</div>
+            <div><strong>Final thoughts:</strong><br/>${(r.survey.finalThoughts||"—").replace(/\n/g,"<br/>")}</div>
+          </div>
+        </details>`:""}
+      </div>
+    `).join("");
+  }
+
+  // Controls logic
+  const swissRoundsDone = s.roundsPlanned ? (s.rounds.filter(rr=>!rr.isTopCut).length >= s.roundsPlanned) : false;
+  if(s.phase==="Complete"){
+    enterTopCutBtn.style.display="none";
+    startNextBtn.disabled=true;
+  } else if(s.phase==="Swiss"){
+    if(s.roundsPlanned && swissRoundsDone){
+      // Swiss finished
+      if(s.topCut && s.topCut.enabled){ enterTopCutBtn.style.display="block"; startNextBtn.disabled=true; }
+      else { enterTopCutBtn.style.display="none"; startNextBtn.disabled=true; openFinalStandingModal(); }
+    } else {
+      enterTopCutBtn.style.display="none"; startNextBtn.disabled=false;
+    }
+  } else if(s.phase==="TopCut"){
+    enterTopCutBtn.style.display="none";
+    const tc = s.topCut;
+    if(tc.eliminated || (tc.currentIndex >= tc.roundsPlanned)){ // safety
+      openFinalStandingModal();
+      startNextBtn.disabled=true;
+    } else {
+      startNextBtn.disabled=false;
+    }
+  }
+}
+
+/* ========== Round State (per play) ========== */
+let roundNumber=1, currentGame=1;
+let scores={p1:0,p2:0}, games={p1:0,p2:0}, ties=0;
+let loreTarget={p1:20,p2:20};
+let currentLog=[], gameLogs=[], gameHistory=[];
+const logBox=document.getElementById("logBox");
+let isTopCutRound=false; // set when starting round
+let topCutStageLabel=null;
+
+function startNextRound(){
+  const s=getActiveSession(); if(!s){ alert("No active session."); return; }
+  if(s.phase==="Complete"){ alert("This tournament is complete and cannot be resumed."); return; }
+
+  // Determine round context
+  if(s.phase==="Swiss"){
+    roundNumber = (s.rounds.filter(r=>!r.isTopCut).length||0) + 1;
+    isTopCutRound=false; topCutStageLabel=null;
+    document.getElementById("roundPhaseLabel").textContent="Round";
+    document.getElementById("surveyPhaseLabel").textContent="Round";
+  } else if(s.phase==="TopCut"){
+    const idx = s.topCut.currentIndex < 0 ? 0 : s.topCut.currentIndex; // should already be set
+    isTopCutRound=true;
+    topCutStageLabel = topCutStageName(idx, s.topCut.roundsPlanned);
+    document.getElementById("roundPhaseLabel").textContent=topCutStageLabel;
+    document.getElementById("surveyPhaseLabel").textContent=topCutStageLabel;
+    roundNumber = idx+1; // display index within Top Cut
+  }
+
+  // Reset game state
+  currentGame=1; scores={p1:0,p2:0}; games={p1:0,p2:0}; ties=0; loreTarget={p1:20,p2:20};
+  currentLog=[]; gameLogs=[]; gameHistory=[]; logBox.innerHTML="";
+  document.getElementById("p1Games").textContent=0; document.getElementById("p2Games").textContent=0;
+  document.getElementById("p1Score").textContent=0; document.getElementById("p2Score").textContent=0;
+  document.getElementById("p2Name").textContent="Opponent";
+  updateGameIndicator();
+  show("roundPage");
+}
+
+function topCutStageName(i, total){
+  // Map from index to stage name counting down to Finals
+  const namesByTotal = {
+    1: ["Finals"],
+    2: ["Semifinals","Finals"],
+    3: ["Quarterfinals","Semifinals","Finals"],
+    4: ["Round of 16","Quarterfinals","Semifinals","Finals"]
+  };
+  const arr = namesByTotal[total] || Array.from({length:total}, (_,k)=>`Top Cut Round ${k+1}`);
+  return arr[i] || `Top Cut Round ${i+1}`;
+}
+
+function updateGameIndicator(){
+  document.getElementById("roundNumberLabel").textContent = roundNumber;
+  document.getElementById("surveyRoundLabel").textContent = roundNumber;
+  const over = isRoundOver();
+  document.getElementById("gameIndicator").textContent = over ? "Round Complete" : `Game ${currentGame} of 3`;
+  const leftBtn = document.getElementById("leftBtn"), rightBtn=document.getElementById("rightBtn");
+  if(over){ leftBtn.textContent="⬅ Previous Game"; rightBtn.textContent="🏁 End Round"; }
+  else if(currentGame===1){ leftBtn.textContent="⬅ Back"; rightBtn.textContent="➡ Next Game"; }
+  else if(currentGame===2){ leftBtn.textContent="⬅ Previous Game"; rightBtn.textContent="➡ Next Game"; }
+  else { leftBtn.textContent="⬅ Previous Game"; rightBtn.textContent="🏁 End Round"; }
+}
+
+function addLog(msg){ const d=document.createElement("div"); d.innerHTML=msg; logBox.appendChild(d); logBox.scrollTop=logBox.scrollHeight; currentLog.push(msg); }
+function endGameLog(){ if(currentLog.length) gameLogs.push([...currentLog]); currentLog=[]; logBox.innerHTML=""; }
+function isRoundOver(){ return (games.p1===2 || games.p2===2 || (games.p1+games.p2+ties)===3); }
+
+function changeScore(player, amt){
+  scores[player]+=amt; if(scores[player]<0) scores[player]=0;
+  document.getElementById(player+"Score").textContent = scores[player];
+  const name = document.getElementById(player+"Name").textContent;
+  addLog(`${name} ${amt>0?"gained":"lost"} ${Math.abs(amt)} lore (now at ${scores[player]})`);
+  if(scores[player] >= loreTarget[player]){
+    pendingWinPlayer = player;
+    document.getElementById("confirmWinText").textContent = `${name} reached ${loreTarget[player]} lore. Confirm win?`;
+    document.getElementById("confirmWinModal").style.display="flex";
+  }
+}
+
+let pendingWinPlayer=null;
+function confirmWin(){
+  const p=pendingWinPlayer; if(!p) return;
+  games[p]++; gameHistory.push(p);
+  document.getElementById(p+"Games").textContent = games[p];
+  addLog(`${document.getElementById(p+"Name").textContent} won Game ${currentGame}!`);
+  endGameLog(); scores={p1:0,p2:0}; document.getElementById("p1Score").textContent=0; document.getElementById("p2Score").textContent=0;
+  closeConfirmWinModal();
+  if(!isRoundOver() && currentGame<3){ currentGame++; }
+  updateGameIndicator();
+  if(isRoundOver()) show("surveyPage");
+}
+function closeConfirmWinModal(){ pendingWinPlayer=null; document.getElementById("confirmWinModal").style.display="none"; }
+
+function toggleLoreTarget(player){
+  loreTarget[player] = (loreTarget[player]===20?25:20);
+  const name = document.getElementById(player+"Name").textContent;
+  addLog(`${name} now needs ${loreTarget[player]} lore to win`);
+}
+
+/* Amount picker */
+function openAmountPopup(player, type){
+  const wrap=document.getElementById("amountPopupContent");
+  wrap.innerHTML = '<button class="close" onclick="closeAmountPopup()">✕</button>';
+  for(let i=2;i<=20;i++){
+    const b=document.createElement("button");
+    b.className="btn"; b.textContent=(type==='plus'?'+':'−')+i;
+    b.onclick=()=>{ changeScore(player,type==='plus'?i:-i); closeAmountPopup(); };
+    wrap.appendChild(b);
+  }
+  document.getElementById("amountPopup").style.display="flex";
+}
+function closeAmountPopup(){ document.getElementById("amountPopup").style.display="none"; }
+document.getElementById("amountPopup").addEventListener("click",e=>{ if(e.target.id==="amountPopup") closeAmountPopup(); });
+
+/* Manual result modal (used for ties or concessions before threshold) */
+function openGameResultModal(){ if(isRoundOver()){ show("surveyPage"); return; } document.getElementById("gameResultModal").style.display="flex"; }
+function closeGameResultModal(){ document.getElementById("gameResultModal").style.display="none"; }
+function recordGameResult(res){
+  if(res==='you'){ games.p1++; gameHistory.push('p1'); addLog(`You won Game ${currentGame} (manual)`); }
+  else if(res==='opponent'){ games.p2++; gameHistory.push('p2'); addLog(`Opponent won Game ${currentGame} (manual)`); }
+  else { ties++; gameHistory.push('tie'); addLog(`Game ${currentGame} ended in a tie.`); }
+  endGameLog(); scores={p1:0,p2:0}; document.getElementById("p1Score").textContent=0; document.getElementById("p2Score").textContent=0;
+  closeGameResultModal();
+  if(!isRoundOver() && currentGame<3){ currentGame++; }
+  updateGameIndicator();
+  if(isRoundOver()) show("surveyPage");
+}
+
+/* Nav buttons in round */
+function handleLeft(){
+  if(isRoundOver()){ previousGame(); return; }
+  if(currentGame===1){ goToActiveOverview(); } else { previousGame(); }
+}
+function handleRight(){
+  if(isRoundOver() || currentGame===3){ show("surveyPage"); }
+  else { openGameResultModal(); }
+}
+function previousGame(){
+  if(gameHistory.length===0){ addLog("No previous game to revert."); return; }
+  const last=gameHistory.pop(); if(last==='p1') games.p1--; else if(last==='p2') games.p2--; else ties--;
+  if(gameLogs.length) gameLogs.pop();
+  if(currentGame>1) currentGame--;
+  logBox.innerHTML=""; currentLog=[]; scores={p1:0,p2:0}; document.getElementById("p1Score").textContent=0; document.getElementById("p2Score").textContent=0;
+  document.getElementById("p1Games").textContent=games.p1; document.getElementById("p2Games").textContent=games.p2;
+  addLog("Reverted last game result.");
+  updateGameIndicator();
+}
+
+/* Name edit */
+let currentEdit=null;
+function openNameEdit(player){
+  currentEdit=player; document.getElementById("nameEditInput").value=document.getElementById(player+"Name").textContent;
+  document.getElementById("nameEditModal").style.display="flex";
+}
+function closeNameEditModal(){ document.getElementById("nameEditModal").style.display="none"; }
+function saveNameEdit(){
+  const v=(document.getElementById("nameEditInput").value||"").trim() || (currentEdit==='p1'?"You":"Opponent");
+  document.getElementById(currentEdit+"Name").textContent=v;
+  addLog(`${currentEdit==='p1'?'You':'Opponent'} name changed to ${v}`);
+  closeNameEditModal();
+}
+
+/* ========== Survey submission ⇒ Save Round + Record update (per ROUND only) ========== */
+function submitSurvey(){
+  const s = getActiveSession(); if(!s){ alert("No active session."); return; }
+  const outcome = computeRoundOutcome();
+  const rd = {
+    id: newId("round"),
+    isTopCut: isTopCutRound,
+    topCutStage: isTopCutRound ? topCutStageLabel : null,
+    roundNumber: isTopCutRound ? (s.topCut.currentIndex+1) : (s.rounds.filter(r=>!r.isTopCut).length+1),
+    opponentName: document.getElementById("p2Name").textContent || "Opponent",
+    record: { wins: games.p1, losses: games.p2, draws: ties },
+    outcome: outcome, // 'win' | 'loss' | 'draw'
+    gameLogs: gameLogs,
+    survey: {
+      inks: [document.getElementById("ink1").value, document.getElementById("ink2").value],
+      deckType: document.getElementById("deckType").value,
+      hadPlan: document.getElementById("hadPlan").value,
+      feelings: document.getElementById("feelings").value,
+      favorability: document.getElementById("favorability").value,
+      hadDecklist: document.getElementById("decklist").value,
+      keyCards: document.getElementById("keyCards").value,
+      finalThoughts: document.getElementById("finalThoughts").value
+    }
+  };
+  s.rounds.push(rd);
+
+  // Update tournament record PER ROUND (not per game)
+  if(outcome==='win') s.totalRecord.wins += 1;
+  else if(outcome==='loss') s.totalRecord.losses += 1;
+  else s.totalRecord.draws += 1;
+
+  // Top Cut elimination or progression
+  if(isTopCutRound){
+    if(outcome==='loss'){
+      s.topCut.eliminated = true;
+      setActiveSession(s);
+      saveDBAndPromptFinal(); // eliminated → finalize
+      return;
+    }else{
+      // If this was the last top cut round, finalize as champion (or placement)
+      if((s.topCut.currentIndex+1) >= s.topCut.roundsPlanned){
+        setActiveSession(s);
+        saveDBAndPromptFinal(); // won finals
+        return;
+      }
+    }
+  }
+
+  setActiveSession(s);
+
+  // Post-survey options messaging
+  const msg = (s.phase==="Swiss") ? "Swiss round saved. Start next Swiss round or return to overview."
+                                  : "Top Cut round saved. Start next Top Cut round or return to overview.";
+  document.getElementById("postSurveyMsg").textContent = msg;
+
+  // If Swiss done now, adjust button to Enter Top Cut or Complete
+  if(s.phase==="Swiss"){
+    const swissDone = s.roundsPlanned && (s.rounds.filter(r=>!r.isTopCut).length >= s.roundsPlanned);
+    const postBtn = document.getElementById("postNextBtn");
+    if(swissDone){
+      if(s.topCut && s.topCut.enabled){ postBtn.textContent="🏆 Enter Top Cut"; postBtn.onclick = openPreTopCutModal; }
+      else{ postBtn.textContent="✅ Complete Event"; postBtn.onclick = openFinalStandingModal; }
+    }else{
+      postBtn.textContent="➡ Next Round"; postBtn.onclick = startNextRound;
+    }
+  } else {
+    // Top Cut flow
+    const tc = s.topCut;
+    const postBtn = document.getElementById("postNextBtn");
+    if(tc.eliminated){
+      postBtn.textContent="✅ Complete Event"; postBtn.onclick = openFinalStandingModal;
+    } else if((tc.currentIndex+1) >= tc.roundsPlanned){
+      postBtn.textContent="✅ Complete Event"; postBtn.onclick = openFinalStandingModal;
+    } else {
+      postBtn.textContent="➡ Next Top Cut Round"; postBtn.onclick = startNextTopCutIndex;
+    }
+  }
+
+  show("postSurveyPage");
+}
+function computeRoundOutcome(){
+  if(games.p1>games.p2) return 'win';
+  if(games.p2>games.p1) return 'loss';
+  return 'draw';
+}
+
+/* Start next top cut round by advancing index */
+function startNextTopCutIndex(){
+  const s=getActiveSession(); if(!s || !s.topCut) return;
+  s.topCut.currentIndex = (s.topCut.currentIndex<0 ? 0 : s.topCut.currentIndex+1);
+  setActiveSession(s);
+  startNextRound();
+}
+
+/* ========== Enter Top Cut ========== */
+function openPreTopCutModal(){ document.getElementById("preTopCutModal").style.display="flex"; }
+function closePreTopCutModal(){ document.getElementById("preTopCutModal").style.display="none"; }
+function enterTopCut(){
+  const s=getActiveSession(); if(!s || !s.topCut) return;
+  const seed=(document.getElementById("preTopCutStanding").value||"").trim()||null;
+  s.preTopCutStanding = seed;
+  s.phase="TopCut";
+  s.topCut.currentIndex = 0; // start at first top cut round
+  setActiveSession(s);
+  closePreTopCutModal();
+  renderActiveOverview();
+}
+
+/* ========== Final Standing & Completion (LOCK) ========== */
+function openFinalStandingModal(){ document.getElementById("finalStandingModal").style.display="flex"; }
+function closeFinalStandingModal(){ document.getElementById("finalStandingModal").style.display="none"; }
+function confirmComplete(){
+  const val=(document.getElementById("finalStandingInput").value||"").trim();
+  const s=getActiveSession(); if(!s) return;
+  s.finalStanding = val || null;
+  s.phase = "Complete";
+
+  // Clear active session so it cannot be resumed
+  const db=loadDB(); db.activeSessionId = null;
+  const i=db.sessions.findIndex(x=>x.id===s.id); if(i>=0) db.sessions[i]=s;
+  saveDB(db);
+
+  closeFinalStandingModal();
+  renderPrevSessions();
+  show("prevSessionsPage");
+}
+function saveDBAndPromptFinal(){ setTimeout(openFinalStandingModal, 0); }
+
+/* ========== Previous Sessions (Search & filters) ========== */
+function renderPrevSessions(){
+  const db=loadDB();
+  const q=(document.getElementById("searchInput").value||"").toLowerCase().trim();
+  const f1=document.getElementById("filterInk1").value;
+  const f2=document.getElementById("filterInk2").value;
+
+  let sessions=[...db.sessions];
+  sessions = sessions.filter(s=>{
+    // Search only tournamentName or myDeckName
+    const nameStr = `${s.tournamentName||""} ${s.myDeckName||""}`.toLowerCase();
+    const queryOk = !q || nameStr.includes(q);
+
+    const f1ok = !f1 || (s.myInks && (s.myInks[0]===f1 || s.myInks[1]===f1));
+    const f2ok = !f2 || (s.myInks && (s.myInks[0]===f2 || s.myInks[1]===f2));
+    return queryOk && f1ok && f2ok;
+  });
+
+  const list=document.getElementById("prevSessionsList");
+  if(!sessions.length){ list.innerHTML='<div class="card muted">No sessions match.</div>'; return; }
+
+  list.innerHTML = sessions.map(s=>{
+    const deckLine = `${s.myDeckName?`<strong>${s.myDeckName}</strong>`:"(No deck name)"}<div class="inkBold">${(s.myInks?.[0]||"—")} • ${(s.myInks?.[1]||"—")}</div>`;
+    const completeBadge = s.phase==="Complete" ? `<span class="badge lock">🔒 Complete</span>` : "";
+    return `
+    <div class="card">
+      <div class="topline">
+        <div>
+          <div><strong>${s.type}</strong> ${s.tournamentName?("— "+s.tournamentName):""}</div>
+          <div class="muted">${new Date(s.createdAt).toLocaleString()} • ${s.format} • Record: ${s.totalRecord.wins}-${s.totalRecord.losses}-${s.totalRecord.draws}</div>
+          <div style="margin-top:6px">${deckLine}</div>
+          <div class="muted" style="margin-top:6px">
+            ${s.preTopCutStanding?`Before Top Cut: <strong>${s.preTopCutStanding}</strong> • `:""}
+            ${s.finalStanding?`Final: <strong>${s.finalStanding}</strong>`:""}
+          </div>
+        </div>
+        <div class="chips">
+          ${s.topCut && s.topCut.enabled ? `<span class="badge">Top ${s.topCut.cutTo}</span>`:""}
+          ${completeBadge}
+        </div>
+      </div>
+      <div class="toolbar" style="max-width:520px">
+        ${s.phase==="Complete" ? "" : `<button class="btn ok" onclick="resumeSession('${s.id}')">▶️ Resume</button>`}
+        <button class="btn" onclick="openSessionDetail('${s.id}')">Open</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* Resume from list (blocked if completed) */
+function resumeSession(id){
+  const db=loadDB(); const s=db.sessions.find(x=>x.id===id); if(!s) return;
+  if(s.phase==="Complete"){ alert("This tournament is complete and cannot be resumed."); return; }
+  db.activeSessionId = id; saveDB(db);
+  renderActiveOverview(); show("roundsOverviewPage");
+}
+
+/* ========== Session Detail (with bottom buttons, lock-aware) ========== */
+let detailSessionId = null;
+function openSessionDetail(id){
+  const db=loadDB(); const s=db.sessions.find(x=>x.id===id); if(!s) return;
+  detailSessionId = id;
+  renderSessionDetailHeader(s,false);
+  renderSessionDetailRounds(s);
+  show("sessionDetailPage");
+}
+function renderSessionDetailHeader(s, edit=false){
+  const el=document.getElementById("sessionDetailHeader");
+  if(!edit){
+    const deckLine = `${s.myDeckName?`<strong>${s.myDeckName}</strong>`:"(No deck name)"}<div class="inkBold">${(s.myInks?.[0]||"—")} • ${(s.myInks?.[1]||"—")}</div>`;
+    el.innerHTML = `
+      <div>
+        <div class="topline">
+          <div>
+            <div><strong>${s.type}</strong> ${s.tournamentName?("— "+s.tournamentName):""}</div>
+            <div class="muted">${new Date(s.createdAt).toLocaleString()} • ${s.format} • Phase: <strong>${s.phase}</strong></div>
+            <div class="muted">Record: ${s.totalRecord.wins}-${s.totalRecord.losses}-${s.totalRecord.draws}</div>
+            <div style="margin-top:6px">${deckLine}</div>
+            <div class="muted" style="margin-top:6px">
+              ${s.preTopCutStanding?`Before Top Cut: <strong>${s.preTopCutStanding}</strong> • `:""}
+              ${s.finalStanding?`Final: <strong>${s.finalStanding}</strong>`:""}
+            </div>
+          </div>
+          <div class="chips">
+            ${s.topCut && s.topCut.enabled ? `<span class="badge">Top ${s.topCut.cutTo}</span>`:""}
+            ${s.phase==="Complete" ? `<span class="badge lock">🔒 Complete</span>` : ""}
+          </div>
+        </div>
+        <div class="toolbar" style="max-width:360px">
+          ${s.phase==="Complete" ? "" : `<button class="btn ok" onclick="resumeSession('${s.id}')">▶️ Resume</button>`}
+          <button class="btn" onclick="toggleDetailEdit(true)">Edit</button>
+        </div>
+      </div>
+    `;
+  } else {
+    el.innerHTML = `
+      <div class="panel2">
+        <div class="row two">
+          <div>
+            <label>Your Ink 1 (required)</label>
+            <select id="editInk1">
+              <option value="">— Select —</option>
+              ${["Amber","Amethyst","Emerald","Ruby","Sapphire","Steel"].map(v=>`<option ${s.myInks?.[0]===v?"selected":""}>${v}</option>`).join("")}
+            </select>
+            <div id="editErr1" class="error" style="display:none">Required.</div>
+          </div>
+          <div>
+            <label>Your Ink 2 (required)</label>
+            <select id="editInk2">
+              <option value="">— Select —</option>
+              ${["Amber","Amethyst","Emerald","Ruby","Sapphire","Steel"].map(v=>`<option ${s.myInks?.[1]===v?"selected":""}>${v}</option>`).join("")}
+            </select>
+            <div id="editErr2" class="error" style="display:none">Required.</div>
+          </div>
+        </div>
+        <div class="row one">
+          <div>
+            <label>Deck Name</label>
+            <input id="editDeckName" value="${s.myDeckName||""}"/>
+          </div>
+          <div>
+            <label>Dreamborn Link</label>
+            <input id="editDeckUrl" value="${s.myDeckUrl||""}" placeholder="https://dreamborn.gg/..."/>
+            <div id="editErrUrl" class="error" style="display:none">Enter a valid URL starting with http(s)://</div>
+          </div>
+        </div>
+        <div class="toolbar" style="max-width:360px">
+          <button class="btn ok" onclick="saveDetailEdits()">Save</button>
+          <button class="btn danger" onclick="toggleDetailEdit(false)">Cancel</button>
+        </div>
+      </div>
+    `;
+  }
+}
+function renderSessionDetailRounds(s){
+  const el=document.getElementById("sessionDetailRounds");
+  if(!s.rounds.length){ el.innerHTML='<div class="card muted">No rounds recorded.</div>'; return; }
+  el.innerHTML = s.rounds.map(r=>`
+    <div class="card">
+      <div>
+        <strong>${r.isTopCut ? (r.topCutStage||"Top Cut") : "Round "+r.roundNumber}</strong>
+        — vs <strong>${r.opponentName||"Opponent"}</strong>
+        ${r.isTopCut?` • <span class="badge">Top Cut</span>`:""}
+      </div>
+      <div class="muted">Match Result: ${r.record.wins}-${r.record.losses}-${r.record.draws} (${r.outcome})</div>
+      <details style="margin-top:8px">
+        <summary>Game Logs</summary>
+        ${r.gameLogs.map((g,i)=>`
+          <div class="panel2" style="margin:8px 0">
+            <div><strong>Game ${i+1}</strong></div>
+            <div class="muted">${g.length?g.join("<br/>"):"No entries"}</div>
+          </div>`).join("")}
+      </details>
+      ${r.survey ? `<details style="margin-top:8px">
+        <summary>Survey Notes</summary>
+        <div class="muted" style="margin-top:6px">
+          <div><strong>Opp Inks:</strong> ${r.survey.inks[0]} / ${r.survey.inks[1]}</div>
+          <div><strong>Deck:</strong> ${r.survey.deckType}</div>
+          <div><strong>Plan:</strong> ${r.survey.hadPlan}</div>
+          <div><strong>Favorable:</strong> ${r.survey.favorability}</div>
+          <div><strong>Had decklist:</strong> ${r.survey.hadDecklist}</div>
+          <div><strong>Feelings:</strong> ${(r.survey.feelings||"—").replace(/\n/g,"<br/>")}</div>
+          <div><strong>Key cards:</strong> ${(r.survey.keyCards||"—").replace(/\n/g,"<br/>")}</div>
+          <div><strong>Final thoughts:</strong><br/>${(r.survey.finalThoughts||"—").replace(/\n/g,"<br/>")}</div>
+        </div>
+      </details>`:""}
+    </div>
+  `).join("");
+}
+function toggleDetailEdit(on){
+  const db=loadDB(); const s=db.sessions.find(x=>x.id===detailSessionId); if(!s) return;
+  renderSessionDetailHeader(s, on);
+}
+function saveDetailEdits(){
+  const db=loadDB(); const i=db.sessions.findIndex(x=>x.id===detailSessionId); if(i<0) return;
+  const s=db.sessions[i];
+
+  const ink1=document.getElementById("editInk1").value.trim();
+  const ink2=document.getElementById("editInk2").value.trim();
+  const urlIn=(document.getElementById("editDeckUrl").value||"").trim();
+  const name=(document.getElementById("editDeckName").value||"").trim();
+
+  document.getElementById("editErr1").style.display = ink1?"none":"block";
+  document.getElementById("editErr2").style.display = ink2?"none":"block";
+  if(!ink1 || !ink2) return;
+
+  let url = urlIn;
+  if(url && !/^https?:\/\//i.test(url)) url="https://"+url;
+  if(url && !/^https?:\/\/\S+\.\S+/.test(url)){ document.getElementById("editErrUrl").style.display="block"; return; }
+  document.getElementById("editErrUrl").style.display="none";
+
+  s.myInks=[ink1,ink2];
+  s.myDeckName= name || null;
+  s.myDeckUrl = url || null;
+
+  db.sessions[i]=s; saveDB(db);
+  renderSessionDetailHeader(s,false); renderSessionDetailRounds(s);
+}
+
+/* Backdrop click to close modals */
+["gameResultModal","confirmWinModal","nameEditModal","preTopCutModal","finalStandingModal"].forEach(id=>{
+  document.getElementById(id).addEventListener("click",e=>{ if(e.target.id===id) document.getElementById(id).style.display="none"; });
+});
+
+/* Helpers */
+function goToActiveOverview(){ renderActiveOverview(); show("roundsOverviewPage"); }
+
+/* INIT */
+renderPrevSessions();
+</script>
+</body>
+</html>

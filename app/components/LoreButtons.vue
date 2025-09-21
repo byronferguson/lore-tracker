@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 const { playerId } = defineProps<{
-  playerId: number;
+  playerId: 1 | 2;
 }>();
 
 const emit = defineEmits<{
-  (e: 'change', payload: { playerId: number; lore: number }): void;
-  (e: 'undo', payload: { playerId: number }): void;
+  (e: 'change', payload: { playerId: 1 | 2; lore: number }): void;
+  (e: 'undo', payload: { playerId: 1 | 2 }): void;
 }>();
 
 const isLoreModalOpen = ref(false);
@@ -66,6 +66,7 @@ const subButtons: Button[] = [
       }"
       :label="button.label"
       :color="button.color"
+      variant="subtle"
       square
       @click="changeLore(button.value)"
     />
@@ -74,6 +75,7 @@ const subButtons: Button[] = [
       <UButton
         label="+X"
         color="success"
+        variant="subtle"
         :ui="{
           base: 'justify-center size-16 rounded-full touch-manipulation',
           label: 'text-3xl',
@@ -91,6 +93,7 @@ const subButtons: Button[] = [
             }"
             :label="button.label"
             :color="button.color"
+            variant="subtle"
             square
             @click="changeLore(button.value)"
           />
@@ -107,6 +110,7 @@ const subButtons: Button[] = [
       }"
       :label="button.label"
       :color="button.color"
+      variant="subtle"
       square
       @click="changeLore(button.value)"
     />
