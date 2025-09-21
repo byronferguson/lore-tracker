@@ -115,7 +115,7 @@ const subButtons: Button[] = [
       @click="changeLore(button.value)"
     />
 
-    <UModal
+    <!-- <UModal
       v-model:open="isUndoModalOpen"
       title="Undo Last Change?"
       description="This will revert the last lore change made."
@@ -143,6 +143,6 @@ const subButtons: Button[] = [
             <UButton label="Undo" color="primary" @click="handleUndo" />
           </div>
         </div> </template
-    ></UModal>
+    ></UModal> -->
   </div>
 </template>
