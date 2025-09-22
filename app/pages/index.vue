@@ -89,7 +89,7 @@ function newTurn() {
       <UColorModeButton class="absolute top-4 right-4" />
     </section>
 
-    <footer class="p-4 flex flex-row gap-2">
+    <footer class="px-6 flex flex-row gap-2">
       <UModal
       v-model:open="isUndoModalOpen"
       title="Undo Last Change?"
@@ -100,7 +100,7 @@ function newTurn() {
         variant="outline"
         color="neutral"
         :ui="{
-          base: 'justify-center  touch-manipulation',
+          base: 'justify-center  touch-manipulation px-4',
           leadingIcon: 'size-8',
         }" />
 
