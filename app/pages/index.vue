@@ -45,6 +45,7 @@ function handleUndo() {
   const lastChange = activeTurn.log.shift()!;
   game.value[`player${lastChange.playerId}Lore`] = lastChange.loreTotal - lastChange.loreChange;
   // player.lore = Math.max(0, player.lore - lastChange.loreChange);
+  isUndoModalOpen.value = false;
 }
 
 function newTurn() {
