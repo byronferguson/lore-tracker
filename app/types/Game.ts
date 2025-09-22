@@ -1,17 +1,12 @@
 type LogEntry = {
-  loreTotal: number;
+  playerId: 1 | 2;
+  lore: number;
   loreChange: number;
-};
-
-type PlayerTurn = {
   loreTotal: number;
-  loreChange: number;
-  log: LogEntry[];
 };
 
 type Turn = {
-  player1: PlayerTurn;
-  player2: PlayerTurn;
+  log: LogEntry[];
 };
 
 type Turns = Turn[];

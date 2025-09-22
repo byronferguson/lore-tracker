@@ -5,20 +5,13 @@ const { playerId } = defineProps<{
 
 const emit = defineEmits<{
   (e: 'change', payload: { playerId: 1 | 2; lore: number }): void;
-  (e: 'undo', payload: { playerId: 1 | 2 }): void;
 }>();
 
 const isLoreModalOpen = ref(false);
-const isUndoModalOpen = ref(false);
 
 function changeLore(amount: number) {
   emit('change', { playerId, lore: amount });
   isLoreModalOpen.value = false;
-}
-
-function handleUndo() {
-  emit('undo', { playerId });
-  isUndoModalOpen.value = false;
 }
 
 type Button = {
@@ -115,34 +108,6 @@ const subButtons: Button[] = [
       @click="changeLore(button.value)"
     />
 
-    <!-- <UModal
-      v-model:open="isUndoModalOpen"
-      title="Undo Last Change?"
-      description="This will revert the last lore change made."
-    >
-      <UButton
-        icon="mdi:undo"
-        variant="outline"
-        color="neutral"
-        :ui="{
-          base: 'justify-center size-16 rounded-full touch-manipulation',
-          leadingIcon: 'size-8',
-        }" />
 
-      <template #content>
-        <div class="p-4 text-center">
-          <p class="mb-4 text-3xl font-bold">Undo Last Change?</p>
-          <p class="mb-8">This will revert the last lore change made.</p>
-          <div class="flex justify-center gap-4">
-            <UButton
-              label="Cancel"
-              color="neutral"
-              variant="outline"
-              @click="isUndoModalOpen = false"
-            />
-            <UButton label="Undo" color="primary" @click="handleUndo" />
-          </div>
-        </div> </template
-    ></UModal> -->
   </div>
 </template>

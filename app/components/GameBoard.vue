@@ -32,12 +32,12 @@ defineEmits<{
 
     <template v-for="(turn, index) in game.turns" :key="`turn-${index}`">
       <div class="bg-[var(--ui-bg)] text-center p-2 content-center">
-        <article v-if="turn.player1.log.length === 0">
+        <article v-if="!turn.log.some(({ playerId }) => playerId === 1)">
           &mdash;
         </article>
-        <article v-else v-for="(lore, loreIndex) in turn.player1.log" :key="`turn-${index}-player1-lore-${loreIndex}`">
-          {{ lore.loreChange > 0 ? '+' : '' }}{{ lore.loreChange }}
-          <span class="text-xs italic">({{ lore.loreTotal }})</span>
+        <article v-else v-for="(entry, loreIndex) in turn.log.filter(({ playerId }) => playerId === 1)" :key="`turn-${index}-player1-lore-${loreIndex}`">
+          {{ entry.lore > 0 ? '+' : '' }}{{ entry.lore }}
+          <span class="text-xs italic">({{ entry.loreTotal }})</span>
         </article>
       </div>
 
@@ -46,12 +46,12 @@ defineEmits<{
       </div>
 
       <div class="bg-[var(--ui-bg)] text-center p-2 content-center">
-        <article v-if="turn.player2.log.length === 0">
+        <article v-if="!turn.log.some(({ playerId }) => playerId === 2)">
           &mdash;
         </article>
-        <article v-else v-for="(lore, loreIndex) in turn.player2.log" :key="`turn-${index}-player2-lore-${loreIndex}`">
-          {{ lore.loreChange > 0 ? '+' : '' }}{{ lore.loreChange }}
-          <span class="text-xs italic">({{ lore.loreTotal }})</span>
+        <article v-else v-for="(entry, loreIndex) in turn.log.filter(({ playerId }) => playerId === 2)" :key="`turn-${index}-player2-lore-${loreIndex}`">
+          {{ entry.lore > 0 ? '+' : '' }}{{ entry.lore }}
+          <span class="text-xs italic">({{ entry.loreTotal }})</span>
         </article>
       </div>
     </template>
