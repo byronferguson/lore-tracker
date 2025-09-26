@@ -46,12 +46,14 @@ const subButtons: Button[] = [
   { label: '-1', value: -1, color: 'error' },
   { label: '-2', value: -2, color: 'error' },
 ];
+
+const numberOfAddButtonsToShow = 4;
 </script>
 
 <template>
   <div class="flex flex-col gap-4 self-center justify-self-center">
     <UButton
-      v-for="button in addButtons.toSpliced(3)"
+      v-for="button in addButtons.toSpliced(numberOfAddButtonsToShow)"
       :key="button.label"
       :ui="{
         base: 'justify-center size-16 rounded-full touch-manipulation',
@@ -67,7 +69,7 @@ const subButtons: Button[] = [
     <UModal v-model:open="isLoreModalOpen" title="Add Lore" description="Select amount to add">
       <UButton
         label="+X"
-        color="success"
+        color="warning"
         variant="subtle"
         :ui="{
           base: 'justify-center size-16 rounded-full touch-manipulation',
@@ -78,7 +80,7 @@ const subButtons: Button[] = [
       <template #content>
         <div class="flex flex-wrap gap-4 p-4 max-w-md justify-center">
           <UButton
-            v-for="button in addButtons.toSpliced(0, 3)"
+            v-for="button in addButtons.toSpliced(0, numberOfAddButtonsToShow)"
             :key="button.label"
             :ui="{
               base: 'justify-center size-16 rounded-full touch-manipulation',
@@ -107,7 +109,5 @@ const subButtons: Button[] = [
       square
       @click="changeLore(button.value)"
     />
-
-
   </div>
 </template>
