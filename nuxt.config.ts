@@ -21,9 +21,10 @@ export default defineNuxtConfig({
           start_url: '/',
           icons: [
             {
-              src: '/favicon.ico',
-              sizes: '64x64 32x32 24x24 16x16',
-              type: 'image/x-icon',
+              src: '/favicon.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable',
             },
           ],
         },
@@ -65,6 +66,11 @@ export default defineNuxtConfig({
           name: 'viewport',
           content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
         },
+      ],
+      title: 'Lorcana Lore Tracker',
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/favicon.png' },
+        { rel: 'apple-touch-icon', href: '/favicon.png' },
       ],
     },
   },
