@@ -1,4 +1,20 @@
 <script setup lang="ts">
+import { useWakeLock } from '@vueuse/core';
+
+const { isSupported, isActive, request, release } = useWakeLock();
+
+onMounted(() => {
+  if (isSupported.value) {
+    request('screen');
+  }
+});
+
+onUnmounted(() => {
+  if (isActive.value) {
+    release();
+  }
+});
+
 const { lore1, lore2, turns, isPlayerOneActive, changeLore, undoLastChange, endTurn, resetGame } =
   useGame();
 
