@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { useStorage } from '@vueuse/core';
 
 export type LoreEntry = {
   playerId: 1 | 2;
@@ -10,13 +10,11 @@ export type LoreEntry = {
 export type Turns = Array<LoreEntry[]>;
 
 export function useGame() {
-  const player1Name = ref('Me');
-  const player2Name = ref('You');
-  const lore1 = ref(0);
-  const lore2 = ref(0);
-  const turns = ref<Turns>([]);
+  const lore1 = useStorage('lore1', 0);
+  const lore2 = useStorage('lore2', 0);
+  const turns = useStorage<Turns>('turns', []);
 
-  const isPlayerOneActive = ref(true);
+  const isPlayerOneActive = useStorage('isPlayerOneActive', true);
 
   function changeLore(playerId: 1 | 2, amount: number) {
     let loreTotal;
@@ -51,8 +49,12 @@ export function useGame() {
 
     const lastEntry = turns.value[0]!.shift();
 
-    // FIXME: currently only handles undo during the current turn
-    if (!lastEntry) return;
+    // Remove the turn if it's empty
+    if (!lastEntry) {
+      turns.value.shift();
+      isPlayerOneActive.value = !isPlayerOneActive.value;
+      return;
+    }
 
     if (lastEntry.playerId === 1) {
       lore1.value = lastEntry.loreTotal - lastEntry.loreChange;
